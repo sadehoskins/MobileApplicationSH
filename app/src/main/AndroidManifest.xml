@@ -1,7 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- ******************** PERMISSIONS ******************** -->
+    <!-- Internet access for Random User API calls -->
+   <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Camera access for AR screen and QR code scanning -->
+   <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Storage access for saving QR codes and pictures -->
+   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+
+    <!-- ******************** FEATURE DECLARATION ******************** -->
+    <!-- Declares regular camera capability (is optional, app works without camera -->
+    <uses-feature android:name="android.hardware.camera.ar"
+        android:required="false"/>
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,17 +32,24 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplicationTestSade"
         tools:targetApi="31">
+
+        <!-- ******************** AR CONFIGURATION ******************** -->
+        <!-- Enables Google AR Core support -->
+        <meta-data android:name="com.google.ar.core" android:value="optional" />
+
+        <!-- ******************** MAIN ACTIVITY ******************** -->
+        <!-- Primary app entry pont with navigation to all screens -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.MyApplicationTestSade">
+
+            <!-- Makes it the launcher activity (app entry point) -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>
-
 </manifest>

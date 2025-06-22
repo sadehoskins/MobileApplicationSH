@@ -3,119 +3,68 @@ package com.example.myapplicationtestsade
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.rememberNavController
+import com.example.myapplicationtestsade.navigation.NavGraph
 import com.example.myapplicationtestsade.ui.theme.MyApplicationTestSadeTheme
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.DefaultRequest
-import io.ktor.client.request.request
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpMethod
-import io.ktor.http.parameters
-import kotlinx.coroutines.launch
+import com.example.myapplicationtestsade.viewmodel.UserViewModel
 
+/**
+ * ******************** MAIN ACTIVITY ********************
+ * Entry point of the Random User App
+ *
+ * Responsibilities:
+ * - Initialize the app theme
+ * - Create and manage the UserViewModel
+ * - Setup navigation controller
+ * - Provide the main navigation graph
+ *
+ * Architecture:
+ * - Single Activity with Compose Navigation
+ * - Shared ViewModel across all screens
+ * - Material Design 3 theming
+ */
 class MainActivity : ComponentActivity() {
+
+    /**
+     * ******************** VIEW MODEL ********************
+     * Create UserViewModel using Android's by viewModels() delegate
+     * This ensures ViewModel survives configuration changes
+     * ViewModel is shared across all navigation destinations
+     */
+    private val userViewModel: UserViewModel by viewModels()
+
+    /**
+     * ******************** ACTIVITY LIFECYCLE ********************
+     * Called when activity is created
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        // ******************** COMPOSE UI SETUP ********************
         setContent {
+            // Apply app theme (Material Design 3)
             MyApplicationTestSadeTheme {
-                /*Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }*/
-                MainContant(modifier = Modifier)
-            }
-        }
-    }
-    @Composable
-    fun MainContant(modifier: Modifier = Modifier){
-        Column{
-            var baconIpsum by remember { mutableStateOf("") }
-            Row(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState()), // zum vertikalen Scrollen
-            ){
-                var textValue by remember { mutableStateOf("") }
-                TextField(
-                    value = textValue,
-                    onValueChange = { new-> textValue = new }
-                )
-                Button(
-                    onClick = {
-                        lifecycleScope.launch {
-                            baconIpsum = client.request {
-                                method = HttpMethod.Get
-                                url {
-                                    parameters{
-                                        //append("parse", textValue)
-                                        append("results", "30")
-                                    }
-                                }
-                            }.bodyAsText()
-                        }
-                    }
+                // Surface provides background color and handles theme
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
                 ) {
-                    Text("Send")
+                    // ******************** NAVIGATION SETUP ********************
+                    // Create navigation controller for screen transitions
+                    val navController = rememberNavController()
+
+                    // Setup navigation graph with all screens
+                    NavGraph(
+                        navController = navController,
+                        userViewModel = userViewModel
+                    )
                 }
             }
-            Text(text = baconIpsum)
         }
     }
 }
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MyApplicationTestSadeTheme {
-        Greeting("Android")
-    }
-}
-
-//1. HttpClient erstellen
-val client = HttpClient(CIO) {
-    // Für den Fall des Aufrufens von Calls mit JSON Responses
-    // install(ContentNegotiation)
-    install(DefaultRequest) {
-        url("https://baconipsum.com/api/?type=meat-and-filler")
-        //url("https://randomuser.me/api/")
-    }
-}
-
-/*
-Http Endpunkt definieren,
-
-Endpunkt aufrufen bei Button Press,
-
-UI aktuallisiern,
-*/
