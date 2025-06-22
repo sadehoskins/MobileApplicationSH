@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.myapplicationtestsade.data.models.RandomUser
 import com.example.myapplicationtestsade.viewmodel.UserViewModel
+import com.example.myapplicationtestsade.ui.theme.PinkTitleText
 
 /**
  * ******************** USER OVERVIEW SCREEN ********************
@@ -43,18 +44,24 @@ fun UserOverviewScreen(
         // ******************** TOP BAR ********************
         topBar = {
             TopAppBar(
-                title = { Text("Random Users") },
+                title = {
+                    Text(
+                        "Random Users",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            color = PinkTitleText
+                        )
+                    )
+                },
                 actions = {
-                    // Camera button - navigate to AR screen (using text temporarily)
+                    // Camera button
                     TextButton(onClick = onCameraClick) {
-                        Text("📷")  // Using emoji as icon
+                        Text("📷")
                     }
                     // Settings button
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = MaterialTheme.colorScheme.onSurface
+                            contentDescription = "Settings"
                         )
                     }
                 }
