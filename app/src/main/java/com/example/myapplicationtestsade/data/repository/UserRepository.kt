@@ -1,19 +1,23 @@
 package com.example.myapplicationtestsade.data.repository
 
 import com.example.myapplicationtestsade.data.api.ApiClient
+import com.example.myapplicationtestsade.data.database.dao.UserDao
+import com.example.myapplicationtestsade.data.mappers.UserMapper
 import com.example.myapplicationtestsade.data.models.RandomUser
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 /**
  * ******************** USER REPOSITORY ********************
- * Repository pattern implementation for user data management
- *
+ * Repository pattern implementation with Room database integration
  * Responsibilities:
- * - Abstract API calls from ViewModels
- * - Handle network errors and convert to app-specific errors
- * - Provide clean, type-safe interface for data operations
+ * - Manage data from both API and local database
+ * - Coordinate between network and local storage
+ * - Provide single source of truth for user data
+ * - Handle offline capabilities
  * - Centralized error handling
  */
-class UserRepository {
+class UserRepository(private val userDao: UserDao) {
 
     // ******************** DEPENDENCIES ********************
 
@@ -23,66 +27,225 @@ class UserRepository {
      */
     private val api = ApiClient.randomUserApi
 
-    // ******************** PUBLIC API METHODS ********************
+    // ******************** DATABASE OPERATIONS ********************
 
     /**
-     * Fetches multiple random users from the API
-     *
-     * @param count Number of users to fetch (default: 10)
-     * @return Result<List<RandomUser>> - Success with user list or Failure with exception
-     *
+     * Get all users from local database
      */
-    suspend fun getRandomUsers(count: Int = 10): Result<List<RandomUser>> {
+    fun getAllUsers(): Flow<List<RandomUser>> {
+        return userDao.getAllUsers().map { entities ->
+            UserMapper.toRandomUserList(entities)
+        }
+    }
+
+    /**
+     * Get users sorted by name
+     */
+    fun getUsersSortedByName(): Flow<List<RandomUser>> {
+        return userDao.getUsersSortedByName().map { entities ->
+            UserMapper.toRandomUserList(entities)
+        }
+    }
+
+    /**
+     * Get users sorted by location
+     */
+    fun getUsersSortedByLocation(): Flow<List<RandomUser>> {
+        return userDao.getUsersSortedByLocation().map { entities ->
+            UserMapper.toRandomUserList(entities)
+        }
+    }
+
+    /**
+     * Search users by name or email
+     */
+    fun searchUsers(searchQuery: String): Flow<List<RandomUser>> {
+        return userDao.searchUsers(searchQuery).map { entities ->
+            UserMapper.toRandomUserList(entities)
+        }
+    }
+
+    /**
+     * Get single user by ID from database
+     */
+    suspend fun getUserById(uniqueId: String): RandomUser? {
+        return userDao.getUserById(uniqueId)?.let { entity ->
+            UserMapper.toRandomUser(entity)
+        }
+    }
+
+    /**
+     * Get total user count from database
+     */
+    suspend fun getUserCount(): Int {
+        return userDao.getUserCount()
+    }
+
+    // ******************** NETWORK + DATABASE OPERATIONS ********************
+
+    /**
+     * Load random users from API and store in database
+     * Combines network fetch with local storage
+     */
+    suspend fun loadRandomUsers(count: Int = 10, forceRefresh: Boolean = false): Result<List<RandomUser>> {
         return try {
-            // Make API call and await response
+            // Check if we should load from cache first
+            if (!forceRefresh) {
+                val localCount = getUserCount()
+                if (localCount >= count) {
+                    // We have enough local data, return success
+                    // Data will be provided via Flow observation
+                    return Result.success(emptyList()) // Flow provides the actual data
+                }
+            }
+
+            // Fetch from API
             val response = api.getRandomUsers(count)
 
             if (response.isSuccessful) {
-                // Success: Extract user list from response body
-                // Handle case where body might be null
-                Result.success(response.body()?.results ?: emptyList())
+                val users = response.body()?.results ?: emptyList()
+
+                if (users.isNotEmpty()) {
+                    // Store in database
+                    val entities = UserMapper.toEntityList(users)
+                    userDao.insertUsers(entities)
+
+                    // Return the users
+                    Result.success(users)
+                } else {
+                    Result.failure(Exception("No users received from API"))
+                }
             } else {
-                // HTTP error (4xx, 5xx): Convert to app exception
-                Result.failure(Exception("Failed to fetch users: ${response.message()}"))
+                // API error - return error but data will come from database via Flow
+                Result.failure(Exception("API unavailable: ${response.message()}"))
             }
         } catch (e: Exception) {
-            // Network error, timeout, JSON parsing error, etc.
-            // Wrap in Result.failure for consistent error handling
+            // Network error - return error but cached data available via Flow
+            Result.failure(Exception("Network error: ${e.message}"))
+        }
+    }
+
+    /**
+     * Add a single random user from API and store in database
+     * Used by FAB button functionality
+     */
+    suspend fun addRandomUser(): Result<RandomUser> {
+        return try {
+            val response = api.getRandomUser()
+
+            if (response.isSuccessful) {
+                val user = response.body()?.results?.firstOrNull()
+
+                if (user != null) {
+                    // Store in database
+                    val entity = UserMapper.toEntity(user)
+                    userDao.insertUser(entity)
+
+                    Result.success(user)
+                } else {
+                    Result.failure(Exception("No user data received"))
+                }
+            } else {
+                Result.failure(Exception("Failed to fetch user: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ******************** MANUAL USER OPERATIONS ********************
+
+    /**
+     * Create a manual user (not from API)
+     */
+    suspend fun createManualUser(user: RandomUser): Result<RandomUser> {
+        return try {
+            val entity = UserMapper.toEntity(user).copy(isFromApi = false)
+            val rowId = userDao.insertUser(entity)
+
+            if (rowId > 0) {
+                Result.success(user)
+            } else {
+                Result.failure(Exception("Failed to save user to database"))
+            }
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
     /**
-     * Fetches a single random user from the API
-     * Used by "Add User" functionality (FAB button)
-     *
-     * @return Result<RandomUser> - Success with single user or Failure with exception
-     *
-     * Note: API always returns array format -> so extract first element
+     * Update existing user
      */
-    suspend fun getRandomUser(): Result<RandomUser> {
+    suspend fun updateUser(user: RandomUser): Result<RandomUser> {
         return try {
-            // Make API call for single user
-            val response = api.getRandomUser()
+            val entity = UserMapper.toEntity(user)
+            val rowsAffected = userDao.updateUser(entity)
 
-            if (response.isSuccessful) {
-                // Extract first user from results array
-                val user = response.body()?.results?.firstOrNull()
-
-                if (user != null) {
-                    // Success: Return the user
-                    Result.success(user)
-                } else {
-                    // Edge case: API returned success but no user data
-                    Result.failure(Exception("No user data received"))
-                }
+            if (rowsAffected > 0) {
+                Result.success(user)
             } else {
-                // HTTP error: Convert to app exception
-                Result.failure(Exception("Failed to fetch user: ${response.message()}"))
+                Result.failure(Exception("User not found or no changes made"))
             }
         } catch (e: Exception) {
-            // Network/parsing error: Wrap in Result.failure
             Result.failure(e)
+        }
+    }
+
+    // ******************** DELETE OPERATIONS ********************
+
+    /**
+     * Delete user by ID
+     */
+    suspend fun deleteUser(uniqueId: String): Result<Unit> {
+        return try {
+            val rowsDeleted = userDao.deleteUserById(uniqueId)
+            if (rowsDeleted > 0) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("User not found"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Delete all users (for "Empty Database" feature)
+     */
+    suspend fun deleteAllUsers(): Result<Int> {
+        return try {
+            val deletedCount = userDao.deleteAllUsers()
+            Result.success(deletedCount)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ******************** BULK OPERATIONS ********************
+
+    /**
+     * Fill database with multiple random users
+     * Used by "Fill Database" settings button
+     */
+    suspend fun fillDatabase(count: Int = 10): Result<List<RandomUser>> {
+        return loadRandomUsers(count, forceRefresh = true)
+    }
+
+    // ******************** UTILITY FUNCTIONS ********************
+
+    /**
+     * Check if database has any users
+     */
+    suspend fun isDatabaseEmpty(): Boolean {
+        return getUserCount() == 0
+    }
+
+    /**
+     * Get users by source type
+     */
+    fun getUsersBySource(isFromApi: Boolean): Flow<List<RandomUser>> {
+        return userDao.getUsersBySource(isFromApi).map { entities ->
+            UserMapper.toRandomUserList(entities)
         }
     }
 }

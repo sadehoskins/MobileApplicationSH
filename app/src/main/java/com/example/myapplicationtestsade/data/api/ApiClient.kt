@@ -8,7 +8,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 /**
  * ******************** API CLIENT CONFIGURATION ********************
  * Singleton object that configures and provides Retrofit instance
- *
  * This object handles:
  * - HTTP client configuration
  * - Request/response logging
@@ -30,7 +29,6 @@ object ApiClient {
     /**
      * HTTP logging interceptor for debugging network requests
      * Logs full request/response bodies in debug builds
-     *
      * Log levels:
      * - NONE: No logging
      * - BASIC: Request/response line only
@@ -46,7 +44,6 @@ object ApiClient {
     /**
      * OkHttp client with custom configuration
      * Includes logging interceptor for network debugging
-     *
      * Additional interceptors can be added here for:
      * - Authentication headers
      * - Request/response modification
@@ -64,7 +61,6 @@ object ApiClient {
      * - Base URL for the API
      * - Custom HTTP client with logging
      * - Gson converter for JSON serialization
-     *
      * Retrofit automatically converts:
      * - Kotlin data classes ↔ JSON
      * - Suspend functions ↔ Asynchronous HTTP calls

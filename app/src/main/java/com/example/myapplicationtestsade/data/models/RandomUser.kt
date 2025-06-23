@@ -6,9 +6,6 @@ import com.google.gson.annotations.SerializedName
  * ******************** API RESPONSE MODELS ********************
  * These data classes represent the JSON structure from randomuser.me API
  * Using @SerializedName for fields that don't match Kotlin naming conventions
- */
-
-/**
  * Root response wrapper from randomuser.me API
  * Contains the list of users and metadata about the request
  */
@@ -33,20 +30,12 @@ data class RandomUser(
     val cell: String,                 // Cell phone number
     val id: Id,                       // National ID (may be null)
     val picture: Picture,             // Profile pictures in different sizes
-    val nat: String,                  // Nationality code (e.g., "US", "GB")
-
-    // Custom field: unique identifier for QR code generation
-    // Combines login UUID with timestamp to ensure uniqueness
-    val uniqueId: String = "${login.uuid}_${System.currentTimeMillis()}"
+    val nat: String                   // Nationality code (e.g., "US", "GB")
 )
 
 /**
  * ******************** NAME COMPONENTS ********************
- */
-
-/**
  * Person's full name broken into components
- * Includes computed property for display purposes
  */
 data class Name(
     val title: String,                // Mr, Ms, Dr. etc.
@@ -59,9 +48,6 @@ data class Name(
 
 /**
  * ******************** LOCATION DATA ********************
- */
-
-/**
  * Complete address and location information
  * Includes street, city, country, and geographic coordinates
  */
@@ -101,9 +87,6 @@ data class Timezone(
 
 /**
  * ******************** AUTHENTICATION DATA ********************
- */
-
-/**
  * Login credentials and unique identifiers
  * Contains various hash formats for different security needs
  */
@@ -119,9 +102,6 @@ data class Login(
 
 /**
  * ******************** DATE INFORMATION ********************
- */
-
-/**
  * Date of birth information
  */
 data class DateOfBirth(
@@ -139,11 +119,8 @@ data class Registered(
 
 /**
  * ******************** IDENTIFICATION ********************
- */
-
-/**
  * National identification information
- * May be null for some countries/users
+ * Note: May be null for some countries/users
  */
 data class Id(
     val name: String?,                // ID type name (e.g., "SSN", "BSN")
@@ -152,9 +129,6 @@ data class Id(
 
 /**
  * ******************** PROFILE PICTURES ********************
- */
-
-/**
  * Profile pictures in different resolutions
  * API provides three sizes for different UI needs
  */
@@ -166,11 +140,7 @@ data class Picture(
 
 /**
  * ******************** API METADATA ********************
- */
-
-/**
  * Information about the API response
- * Useful for pagination and debugging
  */
 data class Info(
     val seed: String,                 // Random seed used for generation

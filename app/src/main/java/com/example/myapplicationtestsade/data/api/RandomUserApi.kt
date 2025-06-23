@@ -8,21 +8,13 @@ import retrofit2.http.Query
 /**
  * ******************** API INTERFACE ********************
  * Retrofit interface for communicating with randomuser.me API
- *
  * API Documentation: https://randomuser.me/documentation
  * Base URL: https://randomuser.me/
- *
  */
 interface RandomUserApi {
 
     /**
      * Fetches multiple random users from the API
-     *
-     * @param results Number of users to fetch (default: 10)
-     * @param page Page number for pagination (default: 1)
-     * @return Response containing RandomUserResponse with user list
-     *
-     * Example API call: https://randomuser.me/api/?results=10&page=1
      */
     @GET("api/")
     suspend fun getRandomUsers(
@@ -33,10 +25,6 @@ interface RandomUserApi {
     /**
      * Fetches a single random user from the API
      * Used by the "Add User" functionality (FAB button)
-     *
-     * @return Response containing RandomUserResponse with single user
-     *
-     * Example API call: https://randomuser.me/api/
      * Note: API always returns an array, even for single user
      */
     @GET("api/")

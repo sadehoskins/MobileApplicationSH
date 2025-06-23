@@ -24,7 +24,6 @@ import com.example.myapplicationtestsade.viewmodel.UserViewModel
 /**
  * ******************** USER DETAIL SCREEN ********************
  * Shows comprehensive user information and generated QR code
- *
  * Features:
  * - Large profile picture
  * - Complete user information (name, contact, location)
@@ -167,7 +166,7 @@ fun UserDetailScreen(
                                 // Generate QR code with user information
                                 QRCodeGenerator.generateQRCode(
                                     text = buildString {
-                                        appendLine("UserID: ${user.uniqueId}")
+                                        appendLine("UserID: ${user.login.uuid}")
                                         appendLine("Name: ${user.name.fullName}")
                                         appendLine("Email: ${user.email}")
                                         appendLine("Phone: ${user.phone}")

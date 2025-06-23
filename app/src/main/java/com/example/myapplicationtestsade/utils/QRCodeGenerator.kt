@@ -13,7 +13,6 @@ import androidx.core.graphics.createBitmap
 /**
  * ******************** QR CODE GENERATOR UTILITY ********************
  * Singleton object for generating QR codes from text data
- *
  * Uses ZXing (Zebra Crossing) library for QR code generation
  * Converts text data into bitmap images that can be displayed in UI
  *
@@ -65,7 +64,7 @@ object QRCodeGenerator {
 
             /**
              * Create Android bitmap from bit matrix
-             * ARGB_8888: Full color support (more compatible than RGB_565)
+             * ARGB_8888: Full color support
              */
             val bitmap = createBitmap(width, height)
 
@@ -82,7 +81,7 @@ object QRCodeGenerator {
                 }
             }
 
-            // Set all pixels at once (more efficient than setPixel() in loop)
+            // Set all pixels at once
             bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
 
             // Return the generated bitmap

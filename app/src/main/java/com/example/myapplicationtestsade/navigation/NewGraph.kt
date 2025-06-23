@@ -13,13 +13,11 @@ import com.example.myapplicationtestsade.viewmodel.UserViewModel
 /**
  * ******************** NAVIGATION GRAPH ********************
  * Defines all app screens and navigation routes
- *
  * Navigation Structure:
  * 1. UserOverviewScreen (Start) → UserDetailScreen
  * 2. UserOverviewScreen → ARScreen (Camera)
  * 3. UserOverviewScreen → SettingsScreen
  * 4. All screens can navigate back to previous
- *
  * Uses single UserViewModel shared across screens for data consistency
  */
 @Composable
@@ -69,7 +67,7 @@ fun NavGraph(
         // Camera preview with QR code scanning capabilities
         composable("ar_screen") {
             ARScreen(
-                // Go back to user overview
+                userViewModel = userViewModel,  // Pass the UserViewModel
                 onBackClick = {
                     navController.popBackStack()
                 }
@@ -80,6 +78,7 @@ fun NavGraph(
         // App configuration and preferences
         composable("settings") {
             SettingsScreen(
+                userViewModel = userViewModel,
                 // Go back to user overview
                 onBackClick = {
                     navController.popBackStack()

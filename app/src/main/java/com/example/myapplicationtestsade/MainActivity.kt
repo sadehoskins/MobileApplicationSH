@@ -16,7 +16,6 @@ import com.example.myapplicationtestsade.viewmodel.UserViewModel
 /**
  * ******************** MAIN ACTIVITY ********************
  * Entry point of the Random User App
- *
  * Responsibilities:
  * - Initialize the app theme
  * - Create and manage the UserViewModel
