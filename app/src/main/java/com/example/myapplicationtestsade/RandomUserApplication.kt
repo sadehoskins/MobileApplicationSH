@@ -22,8 +22,7 @@ class RandomUserApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // Database is initialized lazily when first accessed
-        // Any other app-wide initialization can go here:
+        // TO-DO:
         // - Logging setup
         // - Crash reporting
         // - Analytics initialization

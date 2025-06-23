@@ -35,8 +35,6 @@ fun SettingsScreen(
     onBackClick: () -> Unit
 ) {
     // ******************** SETTINGS STATE ********************
-    // Would normally be saved to SharedPreferences or DataStore
-    // For now -> using local state (resets when app restarts)
 
     var darkMode by remember { mutableStateOf(false) }
     var notifications by remember { mutableStateOf(true) }
@@ -170,7 +168,7 @@ fun SettingsScreen(
                     Button(
                         onClick = {
                             // TODO: Implement cache clearing logic
-                            // For now, just reset cache size
+                            // For now,-> reset cache size
                             cacheSize = 50f
                         },
                         modifier = Modifier.fillMaxWidth()

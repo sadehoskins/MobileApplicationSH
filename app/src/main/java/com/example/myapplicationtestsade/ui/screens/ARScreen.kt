@@ -21,8 +21,6 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-
-// *********************** ADD THESE IMPORTS ***********************
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -34,7 +32,6 @@ import com.example.myapplicationtestsade.utils.QRCodeParser
 /**
  * ******************** AR/CAMERA SCREEN ********************
  * Camera preview screen with QR code scanning capabilities
- *
  * Features:
  * - Camera permission handling
  * - Live camera preview
@@ -47,11 +44,10 @@ import com.example.myapplicationtestsade.utils.QRCodeParser
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ARScreen(
-    userViewModel: UserViewModel, // ✅ ADD THIS PARAMETER
+    userViewModel: UserViewModel,
     onBackClick: () -> Unit
 ) {
     // ******************** PERMISSION HANDLING ********************
-
     // Request camera permission using Accompanist library
     val cameraPermissionState: PermissionState = rememberPermissionState(
         android.Manifest.permission.CAMERA
@@ -94,7 +90,7 @@ fun ARScreen(
                 cameraPermissionState.status.isGranted -> {
                     // Show camera preview with QR scanning
                     CameraPreview(
-                        userViewModel = userViewModel, // ✅ PASS VIEWMODEL
+                        userViewModel = userViewModel, // PASS VIEWMODEL
                         modifier = Modifier.fillMaxSize()
                     )
 
@@ -193,18 +189,11 @@ fun ARScreen(
 /**
  * ******************** CAMERA PREVIEW COMPONENT ********************
  * Handles camera setup and preview display with QR code scanning
- *
- * Features:
- * - Camera lifecycle management
- * - Preview surface setup
- * - Flash control
- * - Real-time QR code scanning
- * - User database lookup
  * - AR overlay for detected users
  */
 @Composable
 fun CameraPreview(
-    userViewModel: UserViewModel, // ✅ ADD THIS PARAMETER
+    userViewModel: UserViewModel,
     modifier: Modifier = Modifier
 ) {
     // ******************** ANDROID CONTEXT AND LIFECYCLE ********************

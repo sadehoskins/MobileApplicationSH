@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.Flow
 /**
  * ******************** USER DAO ********************
  * Data Access Object for user database operations
- *
  * Provides CRUD operations and queries for UserEntity
  * Uses Flow for reactive database updates
  */
@@ -31,7 +30,7 @@ interface UserDao {
     // ******************** QUERY OPERATIONS ********************
 
     /**
-     * Get all users ordered by creation date (newest first)
+     * Get all users ordered by creation date -> newest first
      */
     @Query("SELECT * FROM users ORDER BY createdAt DESC")
     fun getAllUsers(): Flow<List<UserEntity>>

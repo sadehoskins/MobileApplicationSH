@@ -24,7 +24,6 @@ import com.example.myapplicationtestsade.viewmodel.UserViewModel
 /**
  * ******************** USER DETAIL SCREEN ********************
  * Shows comprehensive user information and generated QR code
- *
  * Features:
  * - Large profile picture
  * - Complete user information (name, contact, location)

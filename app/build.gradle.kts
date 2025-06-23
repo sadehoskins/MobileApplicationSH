@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.myapplicationtestsade"
-        minSdk = 35 // ⭐ CHANGED: Lowered for better compatibility
+        minSdk = 35
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"

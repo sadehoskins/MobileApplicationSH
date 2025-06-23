@@ -4,8 +4,7 @@ import androidx.compose.ui.graphics.Color
 
 /**
  * ******************** BABY PINK THEME COLORS ********************
- * Modern, friendly baby pink color palette
- * Designed for a clean, approachable user interface
+ * Designed for a cute, clean, approachable user interface
  */
 
 // ******************** PRIMARY COLORS ********************

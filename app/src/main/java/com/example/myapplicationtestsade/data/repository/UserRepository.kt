@@ -31,7 +31,6 @@ class UserRepository(private val userDao: UserDao) {
 
     /**
      * Get all users from local database
-     * @return Flow of user list for reactive UI updates
      */
     fun getAllUsers(): Flow<List<RandomUser>> {
         return userDao.getAllUsers().map { entities ->
@@ -41,7 +40,6 @@ class UserRepository(private val userDao: UserDao) {
 
     /**
      * Get users sorted by name
-     * @return Flow of users sorted alphabetically
      */
     fun getUsersSortedByName(): Flow<List<RandomUser>> {
         return userDao.getUsersSortedByName().map { entities ->
@@ -51,7 +49,6 @@ class UserRepository(private val userDao: UserDao) {
 
     /**
      * Get users sorted by location
-     * @return Flow of users sorted by country and city
      */
     fun getUsersSortedByLocation(): Flow<List<RandomUser>> {
         return userDao.getUsersSortedByLocation().map { entities ->
@@ -61,8 +58,6 @@ class UserRepository(private val userDao: UserDao) {
 
     /**
      * Search users by name or email
-     * @param searchQuery Search term
-     * @return Flow of matching users
      */
     fun searchUsers(searchQuery: String): Flow<List<RandomUser>> {
         return userDao.searchUsers(searchQuery).map { entities ->
@@ -72,8 +67,6 @@ class UserRepository(private val userDao: UserDao) {
 
     /**
      * Get single user by ID from database
-     * @param uniqueId User's unique identifier
-     * @return RandomUser or null if not found
      */
     suspend fun getUserById(uniqueId: String): RandomUser? {
         return userDao.getUserById(uniqueId)?.let { entity ->
@@ -83,7 +76,6 @@ class UserRepository(private val userDao: UserDao) {
 
     /**
      * Get total user count from database
-     * @return Number of users stored locally
      */
     suspend fun getUserCount(): Int {
         return userDao.getUserCount()
@@ -94,10 +86,6 @@ class UserRepository(private val userDao: UserDao) {
     /**
      * Load random users from API and store in database
      * Combines network fetch with local storage
-     *
-     * @param count Number of users to fetch (default: 10)
-     * @param forceRefresh If true, fetches from API regardless of local data
-     * @return Result<List<RandomUser>> - Success with user list or Failure with exception
      */
     suspend fun loadRandomUsers(count: Int = 10, forceRefresh: Boolean = false): Result<List<RandomUser>> {
         return try {
@@ -140,8 +128,6 @@ class UserRepository(private val userDao: UserDao) {
     /**
      * Add a single random user from API and store in database
      * Used by FAB button functionality
-     *
-     * @return Result<RandomUser> - Success with new user or Failure with exception
      */
     suspend fun addRandomUser(): Result<RandomUser> {
         return try {
@@ -171,8 +157,6 @@ class UserRepository(private val userDao: UserDao) {
 
     /**
      * Create a manual user (not from API)
-     * @param user RandomUser to store
-     * @return Result<RandomUser> - Success or failure
      */
     suspend fun createManualUser(user: RandomUser): Result<RandomUser> {
         return try {
@@ -191,8 +175,6 @@ class UserRepository(private val userDao: UserDao) {
 
     /**
      * Update existing user
-     * @param user Updated user data
-     * @return Result<RandomUser> - Success or failure
      */
     suspend fun updateUser(user: RandomUser): Result<RandomUser> {
         return try {
@@ -213,8 +195,6 @@ class UserRepository(private val userDao: UserDao) {
 
     /**
      * Delete user by ID
-     * @param uniqueId User ID to delete
-     * @return Result<Unit> - Success or failure
      */
     suspend fun deleteUser(uniqueId: String): Result<Unit> {
         return try {
@@ -231,7 +211,6 @@ class UserRepository(private val userDao: UserDao) {
 
     /**
      * Delete all users (for "Empty Database" feature)
-     * @return Result<Int> - Number of users deleted or failure
      */
     suspend fun deleteAllUsers(): Result<Int> {
         return try {
@@ -247,9 +226,6 @@ class UserRepository(private val userDao: UserDao) {
     /**
      * Fill database with multiple random users
      * Used by "Fill Database" settings button
-     *
-     * @param count Number of users to generate
-     * @return Result<List<RandomUser>> - Success with user list or failure
      */
     suspend fun fillDatabase(count: Int = 10): Result<List<RandomUser>> {
         return loadRandomUsers(count, forceRefresh = true)
@@ -259,7 +235,6 @@ class UserRepository(private val userDao: UserDao) {
 
     /**
      * Check if database has any users
-     * @return Boolean indicating if database is empty
      */
     suspend fun isDatabaseEmpty(): Boolean {
         return getUserCount() == 0
@@ -267,8 +242,6 @@ class UserRepository(private val userDao: UserDao) {
 
     /**
      * Get users by source type
-     * @param isFromApi Filter by source (true = API, false = manual)
-     * @return Flow of filtered users
      */
     fun getUsersBySource(isFromApi: Boolean): Flow<List<RandomUser>> {
         return userDao.getUsersBySource(isFromApi).map { entities ->
