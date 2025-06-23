@@ -18,6 +18,7 @@ import coil.compose.AsyncImage
 import com.example.myapplicationtestsade.data.models.RandomUser
 import com.example.myapplicationtestsade.viewmodel.UserViewModel
 import com.example.myapplicationtestsade.ui.theme.PinkTitleText
+import androidx.compose.runtime.collectAsState
 
 /**
  * ******************** USER OVERVIEW SCREEN ********************
@@ -34,9 +35,10 @@ fun UserOverviewScreen(
     // ******************** STATE OBSERVING ********************
 
     // Observe ViewModel state changes
-    val users by userViewModel.users
-    val isLoading by userViewModel.isLoading
-    val error by userViewModel.error
+    val users by userViewModel.users.collectAsState()
+    val isLoading by userViewModel.isLoading.collectAsState()
+    val error by userViewModel.error.collectAsState()
+
 
     // ******************** UI STRUCTURE ********************
 

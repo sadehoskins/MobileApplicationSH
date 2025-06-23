@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("kotlin-parcelize")
+    id("kotlin-kapt") // Required for Room annotation processing
 }
 
 android {
@@ -11,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.myapplicationtestsade"
-        minSdk = 35
+        minSdk = 35 // ⭐ CHANGED: Lowered for better compatibility
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -28,13 +29,16 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
     }
@@ -42,6 +46,7 @@ android {
 
 dependencies {
 
+    // ******************** CORE DEPENDENCIES ********************
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -58,16 +63,17 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    // ******************** FEATURE DEPENDENCIES ********************
     // Navigation
-    implementation("androidx.navigation:navigation-compose:2.8.4")
+    implementation("androidx.navigation:navigation-compose:2.7.6")
 
     // Networking
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // Image Loading
-    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
     // QR Code Generation
     implementation("com.google.zxing:core:3.5.2")
@@ -84,6 +90,28 @@ dependencies {
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
-    // AR Core (Optional for AR features)
+    // AR Core
     implementation("com.google.ar:core:1.40.0")
+
+    // ******************** ROOM DATABASE DEPENDENCIES ********************
+    // Room runtime
+    implementation("androidx.room:room-runtime:2.6.1")
+
+    // Room Kotlin Extensions and Coroutines support
+    implementation("androidx.room:room-ktx:2.6.1")
+
+    // Room annotation processor
+    kapt("androidx.room:room-compiler:2.6.1")
+
+    // ********************COROUTINES SUPPORT ********************
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+
+    // ******************** COMPOSE STATE INTEGRATION ********************
+    implementation("androidx.compose.runtime:runtime-livedata:1.5.8")
+}
+
+// ⭐ MOVED: KAPT configuration AFTER dependencies block
+kapt {
+    correctErrorTypes = true
 }

@@ -167,7 +167,7 @@ fun UserDetailScreen(
                                 // Generate QR code with user information
                                 QRCodeGenerator.generateQRCode(
                                     text = buildString {
-                                        appendLine("UserID: ${user.uniqueId}")
+                                        appendLine("UserID: ${user.login.uuid}")
                                         appendLine("Name: ${user.name.fullName}")
                                         appendLine("Email: ${user.email}")
                                         appendLine("Phone: ${user.phone}")

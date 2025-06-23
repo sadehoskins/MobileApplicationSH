@@ -8,12 +8,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.myapplicationtestsade.R
 
-// Create custom font family using just the regular font
+// Create custom font family using the regular font
 val FunanFont = FontFamily(
-    Font(R.font.furianhalftone_mawvr)  // Simplified approach
+    Font(R.font.furianhalftone_mawvr)
 )
 
-// ONLY ONE Typography declaration
+// Typography declaration
 val CustomTypography = Typography(
     headlineMedium = TextStyle(
         fontFamily = FunanFont,

@@ -33,11 +33,7 @@ data class RandomUser(
     val cell: String,                 // Cell phone number
     val id: Id,                       // National ID (may be null)
     val picture: Picture,             // Profile pictures in different sizes
-    val nat: String,                  // Nationality code (e.g., "US", "GB")
-
-    // Custom field: unique identifier for QR code generation
-    // Combines login UUID with timestamp to ensure uniqueness
-    val uniqueId: String = "${login.uuid}_${System.currentTimeMillis()}"
+    val nat: String                   // Nationality code (e.g., "US", "GB")
 )
 
 /**
