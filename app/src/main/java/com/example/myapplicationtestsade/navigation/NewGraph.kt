@@ -80,6 +80,7 @@ fun NavGraph(
         // App configuration and preferences
         composable("settings") {
             SettingsScreen(
+                userViewModel = userViewModel,
                 // Go back to user overview
                 onBackClick = {
                     navController.popBackStack()

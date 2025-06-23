@@ -11,25 +11,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.myapplicationtestsade.viewmodel.UserViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * ******************** SETTINGS SCREEN ********************
  * App configuration and preferences screen
- *
  * Features:
  * - App behavior settings (dark mode, notifications, etc.)
  * - Storage management (cache size, clear cache)
  * - About section with app information
+ * - Debug tools for QR testing
  * - Privacy policy and terms links
  * - User preferences with persistent state
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
+@Composable  // ✅ ADD THIS LINE
 fun SettingsScreen(
+    userViewModel: UserViewModel,
     onBackClick: () -> Unit
 ) {
     // ******************** SETTINGS STATE ********************
-    // These would normally be saved to SharedPreferences or DataStore
+    // Would normally be saved to SharedPreferences or DataStore
     // For now -> using local state (resets when app restarts)
 
     var darkMode by remember { mutableStateOf(false) }
@@ -163,7 +169,6 @@ fun SettingsScreen(
                     // ******************** CLEAR CACHE BUTTON ********************
                     Button(
                         onClick = {
-
                             // TODO: Implement cache clearing logic
                             // For now, just reset cache size
                             cacheSize = 50f
@@ -178,6 +183,64 @@ fun SettingsScreen(
                     // ******************** STORAGE INFO ********************
                     Text(
                         text = "Used: ~${(cacheSize * 0.7).toInt()} MB | Available: ${(200 - cacheSize).toInt()} MB",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ******************** DEBUG TOOLS SECTION ********************
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "🐛 Debug Tools",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    // DEBUG: Show database info
+                    Button(
+                        onClick = {
+                            // This will print database info to Logcat
+                            userViewModel.printDatabaseInfo()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("📊 Show Database Info (Check Logcat)")
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Clear and reload database
+                    Button(
+                        onClick = {
+                            userViewModel.emptyDatabase()
+                            // Wait a moment then reload
+                            CoroutineScope(Dispatchers.Main).launch {
+                                delay(1000)
+                                userViewModel.fillDatabase(5) // Load 5 fresh users
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Text("🔄 Reset Database (5 fresh users)")
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "💡 Use 'Reset Database' to fix QR scanning issues. This ensures QR codes match current database users.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

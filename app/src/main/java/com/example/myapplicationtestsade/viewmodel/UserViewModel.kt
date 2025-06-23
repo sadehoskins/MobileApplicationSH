@@ -11,12 +11,12 @@ import com.example.myapplicationtestsade.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 
 /**
  * ******************** ENHANCED USER VIEW MODEL ********************
  * AndroidViewModel with Room database integration
- *
  * Features:
  * - Database-backed user management
  * - Reactive UI updates with Flow
@@ -34,7 +34,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     // ******************** UI STATE ********************
 
-    // Users list - now backed by database Flow
+    // Users list backed by database Flow
     private val _users = MutableStateFlow<List<RandomUser>>(emptyList())
     val users: StateFlow<List<RandomUser>> = _users.asStateFlow()
 
@@ -93,7 +93,6 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Load users from database based on current sorting mode
-     * This replaces the old API-only loading
      */
     private fun loadUsersFromDatabase() {
         viewModelScope.launch {
@@ -138,10 +137,9 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // ******************** API + DATABASE OPERATIONS ********************
-
     /**
      * Load random users from API and store in database
-     * Enhanced version that works with database
+     * Works with database
      */
     fun loadRandomUsers(count: Int = 10, forceRefresh: Boolean = false) {
         viewModelScope.launch {
@@ -171,7 +169,6 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             repository.addRandomUser().fold(
                 onSuccess = { newUser ->
                     // User automatically appears via Flow observation
-                    // Optional: Show success message
                 },
                 onFailure = { exception ->
                     _error.value = exception.message
@@ -181,10 +178,8 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // ******************** USER MANAGEMENT ********************
-
     /**
-     * Create a manual user (bonus feature)
-     * @param user User data to create
+     * Create a manual user
      */
     fun createManualUser(user: RandomUser) {
         viewModelScope.launch {
@@ -200,8 +195,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Update existing user (bonus feature)
-     * @param user Updated user data
+     * Update existing user
      */
     fun updateUser(user: RandomUser) {
         viewModelScope.launch {
@@ -222,7 +216,6 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Delete user by ID
-     * @param uniqueId User ID to delete
      */
     fun deleteUser(uniqueId: String) {
         viewModelScope.launch {
@@ -242,7 +235,6 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // ******************** SETTINGS OPERATIONS ********************
-
     /**
      * Empty database (Settings screen feature)
      * Removes all users from local storage
@@ -256,7 +248,6 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
                     _isLoading.value = false
                     selectedUser.value = null
                     // Users list automatically updates via Flow observation
-                    // Optional: Show success message with count
                 },
                 onFailure = { exception ->
                     _error.value = "Failed to empty database: ${exception.message}"
@@ -267,7 +258,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Fill database (Settings screen feature)
+     * Fill database -> Settings screen feature
      * Loads specified number of users from API
      */
     fun fillDatabase(count: Int = 10) {
@@ -320,7 +311,6 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Update search query
-     * @param query Search term
      */
     fun setSearchQuery(query: String) {
         if (_searchQuery.value != query) {
@@ -365,9 +355,6 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Apply search filter to user list
-     * @param users List to filter
-     * @param query Search term
-     * @return Filtered list
      */
     private fun applySearch(users: List<RandomUser>, query: String): List<RandomUser> {
         if (query.isBlank()) return users
@@ -392,7 +379,6 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Select user for detail view
-     * @param user User to select
      */
     fun selectUser(user: RandomUser) {
         selectedUser.value = user
@@ -417,43 +403,83 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     // ******************** UTILITY FUNCTIONS ********************
 
     /**
-     * Get user by ID (for QR code scanning)
-     * @param uniqueId User unique identifier
-     * @return User if found, null otherwise
+     * Get user by ID (QR code scanning) - DEBUGGING
      */
     fun getUserById(uniqueId: String) {
         viewModelScope.launch {
             try {
-                // Clear any previous error
                 _error.value = null
 
-                // First, try to find user in local database
+                // Debug info
+                Log.d("QR_SCAN", "🔍 Scanning for user ID: $uniqueId")
+
+                // Get database stats
+                val totalUsers = repository.getUserCount()
+                Log.d("QR_SCAN", "📊 Database contains $totalUsers users")
+
+                // Try to find user
                 val user = repository.getUserById(uniqueId)
 
                 if (user != null) {
-                    // User found in database
+                    // Success!
                     selectUser(user)
-                    Log.d("UserViewModel", "✅ User found in database: ${user.name.fullName}")
+                    Log.d("QR_SCAN", "✅ SUCCESS! Found user: ${user.name.fullName}")
                 } else {
-                    // User not found in local database
-                    Log.w("UserViewModel", "⚠️ User not found in local database: $uniqueId")
+                    // User not found
+                    Log.w("QR_SCAN", "❌ User not found in database")
 
-                    // Instead of showing error, show a helpful message
-                    _error.value = "User scanned successfully, but not in current database. Try refreshing the user list."
+                    // Show first few users in database for comparison
+                    repository.getAllUsers().take(1).collect { users ->
+                        Log.d("QR_SCAN", "🔍 Available users in database:")
+                        users.take(3).forEach { dbUser ->
+                            Log.d("QR_SCAN", "  - ${dbUser.name.fullName} (ID: ${dbUser.login.uuid})")
+                        }
+                    }
 
-                    // Optionally, you could try to fetch this specific user from API
-                    // But for now, we'll just inform the user
+                    _error.value = "User not found in current database.\n\nScanned ID: ${uniqueId.take(8)}...\nDatabase has: $totalUsers users\n\nTry: Settings → Reset Database → Generate fresh QR codes"
                 }
             } catch (e: Exception) {
-                _error.value = "Failed to find user: ${e.message}"
-                Log.e("UserViewModel", "❌ Error looking up user", e)
+                Log.e("QR_SCAN", "💥 Error during user lookup", e)
+                _error.value = "Database error: ${e.message}"
+            }
+        }
+    }
+
+    /**
+     * DEBUGGING function to print current database contents
+     */
+    fun printDatabaseInfo() {
+        viewModelScope.launch {
+            try {
+                val count = repository.getUserCount()
+                Log.d("DEBUG_DATABASE", "=== DATABASE INFO ===")
+                Log.d("DEBUG_DATABASE", "Total users: $count")
+
+                if (count > 0) {
+                    // Get current users and show their IDs
+                    repository.getAllUsers().take(1).collect { users ->
+                        Log.d("DEBUG_DATABASE", "Current users in database:")
+                        users.forEachIndexed { index, user ->
+                            Log.d("DEBUG_DATABASE", "${index + 1}. ${user.name.fullName}")
+                            Log.d("DEBUG_DATABASE", "   ID: ${user.login.uuid})")
+                            Log.d("DEBUG_DATABASE", "   Email: ${user.email}")
+                            Log.d("DEBUG_DATABASE", "   ---")
+                        }
+                    }
+                } else {
+                    Log.d("DEBUG_DATABASE", "❌ Database is empty!")
+                    Log.d("DEBUG_DATABASE", "💡 Tip: Use 'Fill Database' button to add users")
+                }
+
+                Log.d("DEBUG_DATABASE", "*** END DATABASE INFO ***")
+            } catch (e: Exception) {
+                Log.e("DEBUG_DATABASE", "Error reading database", e)
             }
         }
     }
 
     /**
      * Check if database is empty
-     * @return Boolean indicating if database has users
      */
     suspend fun isDatabaseEmpty(): Boolean {
         return repository.isDatabaseEmpty()
@@ -461,7 +487,6 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Get statistics about stored users
-     * @return Map with user statistics
      */
     fun getUserStatistics() {
         viewModelScope.launch {
