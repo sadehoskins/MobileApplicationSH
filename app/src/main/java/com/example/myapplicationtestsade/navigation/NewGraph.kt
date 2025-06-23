@@ -69,7 +69,7 @@ fun NavGraph(
         // Camera preview with QR code scanning capabilities
         composable("ar_screen") {
             ARScreen(
-                // Go back to user overview
+                userViewModel = userViewModel,  // ✅ Pass the UserViewModel
                 onBackClick = {
                     navController.popBackStack()
                 }

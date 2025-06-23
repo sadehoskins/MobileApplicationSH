@@ -1,6 +1,7 @@
 package com.example.myapplicationtestsade.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -423,14 +424,29 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     fun getUserById(uniqueId: String) {
         viewModelScope.launch {
             try {
+                // Clear any previous error
+                _error.value = null
+
+                // First, try to find user in local database
                 val user = repository.getUserById(uniqueId)
+
                 if (user != null) {
+                    // User found in database
                     selectUser(user)
+                    Log.d("UserViewModel", "✅ User found in database: ${user.name.fullName}")
                 } else {
-                    _error.value = "User not found with ID: $uniqueId"
+                    // User not found in local database
+                    Log.w("UserViewModel", "⚠️ User not found in local database: $uniqueId")
+
+                    // Instead of showing error, show a helpful message
+                    _error.value = "User scanned successfully, but not in current database. Try refreshing the user list."
+
+                    // Optionally, you could try to fetch this specific user from API
+                    // But for now, we'll just inform the user
                 }
             } catch (e: Exception) {
                 _error.value = "Failed to find user: ${e.message}"
+                Log.e("UserViewModel", "❌ Error looking up user", e)
             }
         }
     }

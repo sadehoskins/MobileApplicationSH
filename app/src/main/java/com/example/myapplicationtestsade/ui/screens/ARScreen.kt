@@ -22,21 +22,32 @@ import com.google.accompanist.permissions.rememberPermissionState
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+// *********************** ADD THESE IMPORTS ***********************
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import com.example.myapplicationtestsade.viewmodel.UserViewModel
+import com.example.myapplicationtestsade.utils.QRCodeAnalyzer
+import com.example.myapplicationtestsade.utils.QRCodeParser
+
 /**
  * ******************** AR/CAMERA SCREEN ********************
- * Camera preview screen with AR overlay capabilities
+ * Camera preview screen with QR code scanning capabilities
  *
  * Features:
  * - Camera permission handling
  * - Live camera preview
  * - Flash toggle control
- * - QR code scanning capability (framework ready)
+ * - Real-time QR code scanning
  * - AR overlay UI elements
+ * - User lookup from database
  * - Back navigation
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ARScreen(
+    userViewModel: UserViewModel, // ✅ ADD THIS PARAMETER
     onBackClick: () -> Unit
 ) {
     // ******************** PERMISSION HANDLING ********************
@@ -81,8 +92,9 @@ fun ARScreen(
             when {
                 // ******************** CAMERA PERMISSION GRANTED ********************
                 cameraPermissionState.status.isGranted -> {
-                    // Show camera preview with AR overlay
+                    // Show camera preview with QR scanning
                     CameraPreview(
+                        userViewModel = userViewModel, // ✅ PASS VIEWMODEL
                         modifier = Modifier.fillMaxSize()
                     )
 
@@ -110,7 +122,7 @@ fun ARScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Instructions for future QR scanning
+                        // QR Scanner Status
                         Card(
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
@@ -122,12 +134,12 @@ fun ARScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = "🔍 QR Scanner Ready",
+                                    text = "🔍 QR Scanner Active",
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                                 Text(
-                                    text = "Scanning capability will be added in future updates",
+                                    text = "Scan QR codes to find users in database",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
@@ -159,7 +171,7 @@ fun ARScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "This app needs camera access to scan QR codes and provide AR features",
+                            text = "This app needs camera access to scan QR codes and find users",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -180,16 +192,19 @@ fun ARScreen(
 
 /**
  * ******************** CAMERA PREVIEW COMPONENT ********************
- * Handles camera setup and preview display
+ * Handles camera setup and preview display with QR code scanning
  *
  * Features:
  * - Camera lifecycle management
  * - Preview surface setup
  * - Flash control
- * - Image analysis pipeline (ready for QR scanning)
+ * - Real-time QR code scanning
+ * - User database lookup
+ * - AR overlay for detected users
  */
 @Composable
 fun CameraPreview(
+    userViewModel: UserViewModel, // ✅ ADD THIS PARAMETER
     modifier: Modifier = Modifier
 ) {
     // ******************** ANDROID CONTEXT AND LIFECYCLE ********************
@@ -198,6 +213,48 @@ fun CameraPreview(
 
     // Flash control state
     var flashEnabled by remember { mutableStateOf(false) }
+
+    // QR scanning state variables
+    var scanningActive by remember { mutableStateOf(true) }
+    var detectedUser by remember { mutableStateOf<String?>(null) }
+    var lastScannedId by remember { mutableStateOf<String?>(null) }
+    var scanningStatus by remember { mutableStateOf("Scanning for QR codes...") }
+
+    // ******************** QR CODE DETECTION CALLBACK ********************
+    val onQrCodeDetected: (String) -> Unit = { qrContent ->
+        if (scanningActive) {
+            // Parse the QR content to extract user ID
+            val userId = QRCodeParser.extractUserId(qrContent)
+
+            if (userId != null && userId != lastScannedId) {
+                // Update scanning status
+                scanningStatus = "QR Code detected! Looking up user..."
+                lastScannedId = userId
+
+                // Look up user in database using ViewModel
+                userViewModel.getUserById(userId)
+
+                // Show detected content temporarily
+                detectedUser = "User ID: $userId"
+                scanningActive = false // Pause scanning to show result
+            } else if (userId == null) {
+                // Not a user QR code
+                scanningStatus = "QR code detected but not a user code"
+                detectedUser = "Unknown QR Code"
+                scanningActive = false
+            }
+        }
+    }
+
+    // Re-enable scanning after 3 seconds
+    LaunchedEffect(detectedUser) {
+        if (detectedUser != null) {
+            delay(3000) // Wait 3 seconds
+            detectedUser = null
+            scanningActive = true
+            scanningStatus = "Scanning for QR codes..."
+        }
+    }
 
     // ******************** CAMERA PREVIEW SETUP ********************
     AndroidView(
@@ -216,17 +273,15 @@ fun CameraPreview(
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
 
-                // ******************** IMAGE ANALYSIS ********************
-                // Setup for future QR code scanning
+                // ******************** QR CODE ANALYSIS ********************
+                // Setup QR code scanning with ML Kit
+                val qrCodeAnalyzer = QRCodeAnalyzer(onQrCodeDetected)
+
                 val imageAnalyzer = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
                     .also {
-                        it.setAnalyzer(executor) { imageProxy ->
-                            // TODO: Add QR code scanning logic here
-                            // For now, just close the image to prevent memory leaks
-                            imageProxy.close()
-                        }
+                        it.setAnalyzer(executor, qrCodeAnalyzer)
                     }
 
                 // ******************** CAMERA SELECTOR ********************
@@ -259,8 +314,9 @@ fun CameraPreview(
         modifier = modifier
     )
 
-    // ******************** FLASH TOGGLE BUTTON ********************
+    // ******************** OVERLAY UI ELEMENTS ********************
     Box(modifier = modifier) {
+        // Flash toggle button
         FloatingActionButton(
             onClick = { flashEnabled = !flashEnabled },
             modifier = Modifier
@@ -272,6 +328,71 @@ fun CameraPreview(
                 text = if (flashEnabled) "🔦" else "💡",
                 style = MaterialTheme.typography.titleMedium
             )
+        }
+
+        // ******************** QR DETECTION OVERLAY ********************
+        if (detectedUser != null) {
+            Card(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "✓ QR Code Detected!",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = detectedUser ?: "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+
+                    // Show selected user if found
+                    userViewModel.selectedUser.value?.let { user ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Found: ${user.name.fullName}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = user.email,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+        }
+
+        // ******************** SCANNING STATUS ********************
+        if (scanningActive && detectedUser == null) {
+            Card(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Text(
+                    text = "🔍 $scanningStatus",
+                    modifier = Modifier.padding(12.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }

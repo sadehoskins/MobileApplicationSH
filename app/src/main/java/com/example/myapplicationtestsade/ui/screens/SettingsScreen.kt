@@ -163,6 +163,7 @@ fun SettingsScreen(
                     // ******************** CLEAR CACHE BUTTON ********************
                     Button(
                         onClick = {
+
                             // TODO: Implement cache clearing logic
                             // For now, just reset cache size
                             cacheSize = 50f

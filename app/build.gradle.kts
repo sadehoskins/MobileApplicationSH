@@ -109,9 +109,19 @@ dependencies {
 
     // ******************** COMPOSE STATE INTEGRATION ********************
     implementation("androidx.compose.runtime:runtime-livedata:1.5.8")
+
+    // Google ML Kit for Barcode/QR Code scanning
+    implementation("com.google.mlkit:barcode-scanning:17.2.0")
+
+    // CameraX for image analysis
+    implementation("androidx.camera:camera-mlkit-vision:1.3.0-beta01")
+
+    // Better QR code detection
+    implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0")
+
 }
 
-// ⭐ MOVED: KAPT configuration AFTER dependencies block
+// KAPT configuration AFTER dependencies block
 kapt {
     correctErrorTypes = true
 }
